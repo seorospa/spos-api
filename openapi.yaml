@@ -1,0 +1,1701 @@
+openapi: 3.0.0
+info:
+  version: 0.1
+  title: SPOS API
+  description: API para interactuar con el sistema SPOS
+servers:
+  - url: http://localhost:8080/
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserId:
+      type: integer
+    User:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+        name:
+          type: string
+    UserNew:
+      type: object
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - password
+    TaxId:
+      type: integer
+    TaxIdAndName:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/TaxId"
+        name:
+          type: string
+    TaxNew:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 31
+        percentage:
+          type: number
+        fixed:
+          type: number
+      required:
+        - name
+    Tax:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/TaxId"
+        name:
+          type: string
+        percentage:
+          type: string
+        fixed:
+          type: string
+    UserNoId:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    UserAllFields:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    ClientId:
+      type: integer
+    ClientNew:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 31
+        email:
+          type: string
+          maxLength: 31
+        phone:
+          type: string
+          maxLength: 31
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+        reason:
+          type: string
+        debit_or_credit:
+          type: string
+          enum: ["debit", "credit"]
+        user_id:
+          $ref: "#/components/schemas/UserId"
+    Client:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ClientId"
+        name:
+          type: string
+          maxLength: 31
+        phone:
+          type: string
+          maxLength: 31
+    CategoryId:
+      type: integer
+    Category:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/CategoryId"
+        name:
+          type: string
+        father:
+          $ref: "#/components/schemas/CategoryId"
+    CategoryNew:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 31
+        father:
+          $ref: "#/components/schemas/CategoryId"
+      required:
+        - name
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+        user:
+          type: integer
+        name:
+          type: string
+        products:
+          type: string
+        client:
+          $ref: "#/components/schemas/ClientId"
+        status:
+          type: string
+          enum: [paid, unpaid, cancelled]
+    TicketSinId:
+      type: object
+      properties:
+        user:
+          type: integer
+        name:
+          type: string
+        products:
+          type: string
+        client:
+          $ref: "#/components/schemas/ClientId"
+        status:
+          type: string
+          enum: [paid, unpaid, cancelled]
+    TicketNew:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserId"
+        name:
+          type: string
+          maxLength: 255
+      required:
+        - user
+        - name
+    ProductList:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          maxLength: 63
+        code:
+          type: number
+          maxLength: 127
+        price:
+          type: number
+          minimum: 0
+    ProductNew:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 63
+        code:
+          type: string
+          maxLength: 127
+        price:
+          type: number
+          minimum: 0
+        qty:
+          type: integer
+          minimum: 0
+        cost:
+          type: number
+          minimum: 0
+        min:
+          type: integer
+          minimum: 0
+        max:
+          type: integer
+          minimum: 0
+        ws_min:
+          type: integer
+          minimum: 0
+        ws_price:
+          type: number
+          minimum: 0
+        category:
+          $ref: "#/components/schemas/CategoryId"
+        unit:
+          type: boolean
+        taxes:
+          type: string
+      required:
+        - title
+        - code
+        - price
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          maxLength: 63
+        code:
+          type: string
+          maxLength: 127
+        price:
+          type: number
+          minimum: 0
+        qty:
+          type: integer
+          minimum: 0
+        cost:
+          type: number
+          minimum: 0
+        min:
+          type: integer
+          minimum: 0
+        max:
+          type: integer
+          minimum: 0
+        ws_min:
+          type: integer
+          minimum: 0
+        ws_price:
+          type: number
+          minimum: 0
+        category:
+          $ref: "#/components/schemas/CategoryId"
+        unit:
+          type: boolean
+        taxes:
+          type: string
+paths:
+  /auth:
+    get:
+      security: []
+      description: Refrescar token JWT
+      tags:
+        - Autorización
+      responses:
+        200:
+          description: Nuevo token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+              example:
+                token: JhbGci0iJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkRyLiBTaGF1biBQYXJpc2lhbiIsImlhdCI6MTYyNjM3NzUzNSwiZXhwIjoxNjI2Mzc3NTM1fQ.IfCIZqgh_GqQua3kevcDOATMiT9FfrgdZxf9eG4wqm4
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /auth/{id}:
+    post:
+      description: Obtener token JWT
+      tags:
+        - Autorización
+      requestBody:
+        description: Contraseña del usuario
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              required:
+                - password
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              required:
+                - password
+      responses:
+        200:
+          description: Token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+              example:
+                token: JhbGci0iJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkRyLiBTaGF1biBQYXJpc2lhbiIsImlhdCI6MTYyNjM3NzUzNSwiZXhwIjoxNjI2Mzc3NTM1fQ.IfCIZqgh_GqQua3kevcDOATMiT9FfrgdZxf9eG4wqm4
+        401:
+          description: Id de usuario o contraseña incorrecta
+          content:
+            application/json:
+              schema:
+                type: object
+  /users:
+    get:
+      description: Obtener lista de todos los usuarios
+      security: []
+      tags:
+        - Usuarios
+      responses:
+        200:
+          description: Lista de todos los usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+              example:
+                - id: 1
+                  name: Juan Pérez
+                - id: 2
+                  name: Camila Gonzáles
+                - id: 3
+                  name: Pedro Sánchez
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear usuario
+      tags:
+        - Usuarios
+      requestBody:
+        description: Información del nuevo usuario
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/UserNew"
+      responses:
+        200:
+          description: Detalles del nuevo usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/User"
+              example:
+                id: 1
+                name: Juan Pérez
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: array
+                    items:
+                      - string
+                  password:
+                    type: array
+                    items:
+                      - string
+  /users/{id}:
+    get:
+      description: Obtener información de un usuario
+      tags:
+        - Usuarios
+      responses:
+        200:
+          description: Detalles del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/User"
+              example:
+                id: 1
+                name: Juan Pérez
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Cambiar información de un usuario
+      tags:
+        - Usuarios
+      requestBody:
+        description: Información a actualizar del usuario
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/UserNoId"
+            example:
+              name: Juan Pérez
+              email: juan@ejemplo.com
+              password: abc123
+      responses:
+        200:
+          description: Detalles del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/UserAllFields"
+            example:
+              id: 1
+              name: Juan Pérez
+              email: juan@ejemplo.com
+              password: abc123
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      - string
+                  name:
+                    type: array
+                    items:
+                      - string
+                  password:
+                    type: array
+                    items:
+                      - string
+    delete:
+      description: Eliminar usuario
+      tags:
+        - Usuarios
+      responses:
+        200:
+          description: Usuario eliminado
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /clients:
+    get:
+      description: Obtener lista de clientes
+      tags:
+        - Clientes
+      responses:
+        200:
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+              example:
+                - id: 1
+                  name: Juan Pérez
+                  phone: +56 1 1234 1234
+                - id: 2
+                  name: Camila Gonzáles
+                  phone: +56 1 1234 1234
+                - id: 3
+                  name: Pedro Sánchez
+                  phone: +56 1 1234 1234
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear cliente
+      tags:
+        - Clientes
+      requestBody:
+        description: Información del nuevo cliente
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/ClientNew"
+            example:
+              name: Juan Pérez
+              email: juan@example.com
+              phone: "+56112341234"
+      responses:
+        200:
+          description: Detalles del nuevo cliente
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Client"
+              example:
+                name: Juan Pérez
+                email: juan@example.com
+                phone: "+56112341234"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: array
+                    items:
+                      - string
+                  email:
+                    type: array
+                    items:
+                      - string
+                  phone:
+                    type: array
+                    items:
+                      - string
+  /clients/{id}:
+    get:
+      description: Obtener información de un cliente
+      tags:
+        - Clientes
+      responses:
+        200:
+          description: Información del cliente
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Client"
+              example:
+                id: 1
+                name: Juan Pérez
+                phone: "+56 1 1234 1234"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de un cliente
+      tags:
+        - Clientes
+      requestBody:
+        description: Información a actualizer del cliente
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Client"
+            example:
+              id: 1
+              name: Juan Pérez
+              phone: "+56 1 1234 1234"
+      responses:
+        200:
+          description: Detalles del cliente
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Client"
+            example:
+              id: 1
+              name: Juan Pérez
+              phone: "+56 1 1234 1234"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      - string
+                  name:
+                    type: array
+                    items:
+                      - string
+                  email:
+                    type: array
+                    items:
+                      - string
+                  phone:
+                    type: array
+                    items:
+                      - string
+    delete:
+      description: Eliminar un cliente
+      tags:
+        - Clientes
+      responses:
+        200:
+          description: Cliente eliminado
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /categories:
+    get:
+      description: Obtener lista de categorías
+      tags:
+        - Categorías
+      responses:
+        200:
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+                example:
+                  - id: 1
+                    name: Abarrotes
+                  - id: 2
+                    name: Papelería
+                  - id: 3
+                    name: Conservas
+                  - id: 4
+                    name: Cartones
+                    father: 2
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear categoría
+      tags:
+        - Categorías
+      requestBody:
+        description: Información de la nueva categoría
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryNew"
+            example:
+              name: Conservas
+              father: 14
+      responses:
+        200:
+          description: Detalles de la nueva categoría
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Category"
+              example:
+                id: 21
+                name: Conservas
+                father: 14
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: array
+                    items:
+                      - string
+                  father:
+                    type: array
+                    items:
+                      - string
+  /categories/{id}:
+    get:
+      description: Obtener información de una categoría
+      tags:
+        - Categorías
+      responses:
+        200:
+          description: Información de una categoría
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Category"
+              example:
+                id: 5
+                name: Cartones
+                father: 2
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de una categoría
+      tags:
+        - Categorías
+      requestBody:
+        description: Información a actualizar de la categoría
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Category"
+            example:
+              id: 5
+              name: Cartones
+              father: 2
+      responses:
+        200:
+          description: Detalles de la categoría
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Category"
+              example:
+                id: 5
+                name: Cartones
+                father: 2
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      description: Eliminar una categoría
+      tags:
+        - Categorías
+      responses:
+        200:
+          description: Categoría eliminada
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /tickets:
+    get:
+      description: Obtener lista de tickets
+      tags:
+        - Tickets
+      responses:
+        200:
+          description: Lista de tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Información del nuevo ticket
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/TicketNew"
+            example:
+              user: 1
+              name: Juan Pérez
+      responses:
+        200:
+          description: Detalles del nuevo ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: array
+                    items:
+                      - string
+                  name:
+                    type: array
+                    items:
+                      - string
+                  state:
+                    type: array
+                    items:
+                      - string
+                  client:
+                    type: array
+                    items:
+                      - string
+                  status:
+                    type: array
+                    items:
+                      - string
+  /tickets/{id}:
+    get:
+      description: Obtener información de un ticket
+      tags:
+        - Tickets
+      responses:
+        200:
+          description: Información de un ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de un ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Información del ticket a actualizar
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/TicketSinId"
+      responses:
+        200:
+          description: Detalles del ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      - string
+                  user:
+                    type: array
+                    items:
+                      - string
+                  name:
+                    type: array
+                    items:
+                      - string
+                  state:
+                    type: array
+                    items:
+                      - string
+                  client:
+                    type: array
+                    items:
+                      - string
+                  status:
+                    type: array
+                    items:
+                      - string
+    delete:
+      description: Eliminar un ticket
+      tags:
+        - Tickets
+      responses:
+        200:
+          description: Ticket eliminado
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /tickets/{id}/add:
+    put:
+      description: Añadir un producto a un ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Información del producto a agregar
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                qty:
+                  type: integer
+              required:
+                - code
+                - qty
+            example:
+              code: 9312341
+              qty: 1
+      responses:
+        200:
+          description: Objeto de los productos incluidos en el ticket, incluyendo el nuevo producto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      price:
+                        type: number
+                      category:
+                        $ref: "#/components/schemas/CategoryId"
+                      qty:
+                        type: integer
+              example:
+                9312341:
+                  title: Bolsa de Porotos 1kg
+                  price: 2300
+                  category: 2
+                  qty: 1
+                9102000:
+                  title: Cuaderno 100 páginas
+                  price: 1900
+                  category: 1
+                  qty: 2
+        405:
+          description: No hay suficiente stock del producto
+          content:
+            application/json:
+              schema:
+                type: object
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /tickets/{id}/del:
+    put:
+      description: Eliminar un producto del ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Código del producto a eliminar
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+              required:
+                - code
+            example:
+              code: 931314
+      responses:
+        200:
+          description: Producto eliminado del ticket satisfactoriamente
+          content:
+            application/json:
+              schema:
+                type: object
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /tickets/{id}/change:
+    put:
+      description: Cambiar cantidad de los productos en el ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Información del producto en el ticket a cambiar
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                qty:
+                  type: integer
+              required:
+                - code
+                - qty
+            example:
+              code: 931314
+              qty: 2
+      responses:
+        200:
+          description: El producto en el ticket fue cambiado satisfactoriamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: object
+                    qty: 2
+        405:
+          description: No hay suficiente stock del producto
+          content:
+            application/json:
+              schema:
+                type: object
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /tickets/{id}/claim:
+    put:
+      description: Cambiar el usuario asociado al ticket
+      tags:
+        - Tickets
+      responses:
+        200:
+          description: El ticket fue reasignado al nuevo usuario satisfactoriamente
+          content:
+            application/json:
+              schema:
+                type: object
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /products:
+    get:
+      description: Obtener lista de productos
+      tags:
+        - Productos
+      requestBody:
+          description: (opcional) parámetros de cada producto a devolver
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - string
+              example:
+                - id
+                - title
+                - code
+                - price
+      responses:
+        200:
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductList"
+              example:
+                - id: 1
+                  title: Papel Kraft
+                  code: 123123
+                  price: 4990
+                - id: 2
+                  title: Mantequilla
+                  code: 123124
+                  price: 1490
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear producto
+      tags:
+        - Productos
+      requestBody:
+        description: Información del nuevo producto
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/ProductNew"
+            example:
+              title: Papel kraft
+              code: 123123
+              price: 1230
+              qty: 30
+              cost: 590
+              min: 10
+              max: 90
+              ws_min: 5
+              ws_price: 990
+              category: 2
+              unit: true
+              taxes: No
+      responses:
+        200:
+          description: Detalles del nuevo producto
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Product"
+              example:
+                id: 1
+                title: Papel kraft
+                code: 123123
+                price: 1230
+                qty: 30
+                cost: 590
+                min: 10
+                max: 90
+                ws_min: 5
+                ws_price: 990
+                category: 2
+                unit: true
+                taxes: No
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: array
+                    items:
+                      - string
+                  code:
+                    type: array
+                    items:
+                      - string
+                  price:
+                    type: array
+                    items:
+                      - string
+  /products/{id}:
+    get:
+      description: Obtener información de un producto
+      tags:
+        - Productos
+      responses:
+        200:
+          description: Información de un producto
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Product"
+              example:
+                id: 1
+                title: Papel kraft
+                code: 123123
+                price: 1230
+                qty: 30
+                cost: 590
+                min: 10
+                max: 90
+                ws_min: 5
+                ws_price: 990
+                category: 2
+                unit: true
+                taxes: No
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de un producto
+      tags:
+        - Productos
+      requestBody:
+        description: Información del producto a actualizar
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Product"
+            example:
+              id: 1
+              title: Papel kraft
+              code: 123123
+              price: 1230
+              qty: 30
+              cost: 590
+              min: 10
+              max: 90
+              ws_min: 5
+              ws_price: 990
+              category: 2
+              unit: true
+              taxes: No
+      responses:
+        200:
+          description: Detalles del producto
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Product"
+              example:
+                id: 1
+                title: Papel kraft
+                code: 123123
+                price: 1230
+                qty: 30
+                cost: 590
+                min: 10
+                max: 90
+                ws_min: 5
+                ws_price: 990
+                category: 2
+                unit: true
+                taxes: No
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      - string
+                  title:
+                    type: array
+                    items:
+                      - string
+                  code:
+                    type: array
+                    items:
+                      - string
+                  price:
+                    type: array
+                    items:
+                      - string
+    delete:
+      description: Eliminar un producto
+      tags:
+        - Productos
+      responses:
+        200:
+          description: Producto eliminado
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /transactions:
+    get:
+      description: Obtener lista de transacciones
+      tags:
+        - Transacciones
+      responses:
+        200:
+          description: Lista de transacciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+              example:
+                - id: 1
+                  amount: 10000
+                  reason: "Ingreso de monedas para cambio"
+                  debit_or_credit: credit
+                  user_id: 1
+                - id: 2
+                  amount: 20000
+                  reason: "Retiro de billetes"
+                  debit_or_credit: debit
+                  user_id: 1
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear cliente
+      tags:
+        - Transacciones
+      requestBody:
+        description: Información de la nueva transacción
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Transaction"
+            example:
+              id: 1
+              amount: 20000
+              reason: "Retiro de billetes"
+              debit_or_credit: debit
+              user_id: 1
+      responses:
+        200:
+          description: Detalles de la nueva transacción
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Transaction"
+              example:
+                id: 1
+                amount: 20000
+                reason: "Retiro de billetes"
+                debit_or_credit: debit
+                user_id: 1
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: array
+                    items:
+                      - string
+                  email:
+                    type: array
+                    items:
+                      - string
+                  phone:
+                    type: array
+                    items:
+                      - string
+  /transactions/{id}:
+    get:
+      description: Obtener información de una transacción
+      tags:
+        - Transacciones
+      responses:
+        200:
+          description: Información de la transacción
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Transaction"
+              example:
+                id: 1
+                amount: 10000
+                reason: "Ingreso de monedas para cambio"
+                debit_or_credit: credit
+                user_id: 1
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de un cliente
+      tags:
+        - Transacciones
+      requestBody:
+        description: Información a actualizar de la transacción
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Transaction"
+            example:
+              id: 1
+              amount: 10000
+              reason: "Ingreso de monedas para cambio"
+              debit_or_credit: credit
+              user_id: 1
+      responses:
+        200:
+          description: Detalles del cliente
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Transaction"
+            example:
+              id: 1
+              amount: 10000
+              reason: "Ingreso de monedas para cambio"
+              debit_or_credit: credit
+              user_id: 1
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+        422:
+          description: Uno o más datos de la solicitud fallaron verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      - string
+                  name:
+                    type: array
+                    items:
+                      - string
+                  email:
+                    type: array
+                    items:
+                      - string
+                  phone:
+                    type: array
+                    items:
+                      - string
+    delete:
+      description: Eliminar un cliente
+      tags:
+        - Transacciones
+      responses:
+        200:
+          description: Transacción eliminado
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /taxes:
+    get:
+      description: Mostrar todos los tipos de impuestos guardados en el sistema
+      tags:
+        - Impuestos
+      responses:
+        200:
+          description: Lista paginada de todos los impuestos del sistema
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaxIdAndName"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: Crear nuevo tipo de impuesto
+      tags:
+        - Impuestos
+      requestBody:
+        description: Información del impuesto a crear
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxNew"
+      responses:
+        200:
+          description: Información del impuesto recién creado
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tax"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /taxes/{id}:
+    get:
+      description: Obtener información de un tipo de impuesto
+      tags:
+        - Impuestos
+      responses:
+        200:
+          description: Información del impuesto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tax"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      description: Actualizar información de un impuesto
+      tags:
+        - Impuestos
+      requestBody:
+        description: Información a actualizar del impuesto
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tax"
+      responses:
+        200:
+          description: Información actualizada del impuesto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tax"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      description: Borrar un impuesto
+      tags:
+        - Impuestos
+      responses:
+        200:
+          description: El impuesto ha sido borrado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+  /summary:
+    get:
+      description: Resumen de las ventas hechas
+      tags:
+        - Resúmenes
+      responses:
+        200:
+          description: Total de todas las ventas, ordenadas por categoría
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    $ref: "#/components/schemas/CategoryId"
+                example:
+                  9: 1023
+                  2: 19000
+                  10: 3012
+  /:
+    get:
+      description: Obtiene versión de la API e información de los autores
+      security: []
+      tags:
+        - Versión
+      responses:
+        200:
+          description: Versión de la API e información de los autores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app:
+                    type: string
+                  version:
+                    type: string
+                  contributors:
+                    type: array
+              example:
+                app: spos
+                version: 0.1
+                contributors:
+                  - "Sebastián Osorio <seorospa@gmail.com>"
+                  - "César Bravo <cbravo@bcyt.cl>"
+                  - "Matías Gómez <matias.gomez@virginiogomez.cl>"
+security:
+  - bearerAuth: []
