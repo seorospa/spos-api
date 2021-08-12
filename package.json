@@ -4,5 +4,6 @@
   },
   "scripts": {
     "start": "yarn http-server --cors -o index.html -p 9000"
-  }
+  },
+  "license" : "MIT"
 }

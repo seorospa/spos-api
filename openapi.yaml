@@ -278,7 +278,7 @@ components:
           type: string
 paths:
   /auth:
-    get:
+    put:
       security: []
       description: Refrescar token JWT
       tags:
@@ -301,7 +301,6 @@ paths:
             application/json:
               schema:
                 type: object
-  /auth/{id}:
     post:
       description: Obtener token JWT
       tags:
@@ -313,17 +312,23 @@ paths:
             schema:
               type: object
               properties:
+                user_id:
+                  type: integer
                 password:
                   type: string
               required:
+                - user_id
                 - password
           application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
+                user_id:
+                  type: integer
                 password:
                   type: string
               required:
+                - user_id
                 - password
       responses:
         200:
@@ -977,72 +982,8 @@ paths:
             application/json:
               schema:
                 type: object
-  /tickets/{id}/add:
-    put:
-      description: Añadir un producto a un ticket
-      tags:
-        - Tickets
-      requestBody:
-        description: Información del producto a agregar
-        content:
-          'application/json':
-            schema:
-              type: object
-              properties:
-                code:
-                  type: string
-                qty:
-                  type: integer
-              required:
-                - code
-                - qty
-            example:
-              code: 9312341
-              qty: 1
-      responses:
-        200:
-          description: Objeto de los productos incluidos en el ticket, incluyendo el nuevo producto
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                      price:
-                        type: number
-                      category:
-                        $ref: "#/components/schemas/CategoryId"
-                      qty:
-                        type: integer
-              example:
-                9312341:
-                  title: Bolsa de Porotos 1kg
-                  price: 2300
-                  category: 2
-                  qty: 1
-                9102000:
-                  title: Cuaderno 100 páginas
-                  price: 1900
-                  category: 1
-                  qty: 2
-        405:
-          description: No hay suficiente stock del producto
-          content:
-            application/json:
-              schema:
-                type: object
-        401:
-          description: Token JWT de autenticación no presente o inválido
-          content:
-            application/json:
-              schema:
-                type: object
-  /tickets/{id}/del:
-    put:
+  /tickets/{id}/cart:
+    delete:
       description: Eliminar un producto del ticket
       tags:
         - Tickets
@@ -1072,7 +1013,6 @@ paths:
             application/json:
               schema:
                 type: object
-  /tickets/{id}/change:
     put:
       description: Cambiar cantidad de los productos en el ticket
       tags:
