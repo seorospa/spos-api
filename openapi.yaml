@@ -1075,6 +1075,38 @@ paths:
             application/json:
               schema:
                 type: object
+  /tickets/{id}/add_common_product/:
+    post:
+      description: Agregar producto común a un ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Información del producto común a agregar
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price:
+                  type: number
+                qty:
+                  type: integer
+            example:
+              price: 1000
+              qty: 5
+      responses:
+        200:
+          description: Ticket con el producto común agregado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
   /products:
     get:
       description: Obtener lista de productos
