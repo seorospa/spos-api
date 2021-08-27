@@ -1075,8 +1075,8 @@ paths:
             application/json:
               schema:
                 type: object
-  /tickets/{id}/add_common_product/:
-    post:
+  /tickets/{id}/cart/common:
+    put:
       description: Agregar producto común a un ticket
       tags:
         - Tickets
@@ -1087,13 +1087,16 @@ paths:
             schema:
               type: object
               properties:
+                title:
+                  type: string
                 price:
                   type: number
                 qty:
                   type: integer
             example:
-              price: 1000
-              qty: 5
+              title: "Mantequilla"
+              price: 1800
+              qty: 2
       responses:
         200:
           description: Ticket con el producto común agregado
@@ -1101,6 +1104,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ticket"
+        401:
+          description: Token JWT de autenticación no presente o inválido
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      description: Eliminar producto común del ticket
+      tags:
+        - Tickets
+      requestBody:
+        description: Código del producto común a eliminar
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+            example:
+              code: "~1ab713a"
+      responses:
+        200:
+          description: El producto común ha sido eliminado del ticket
         401:
           description: Token JWT de autenticación no presente o inválido
           content:
