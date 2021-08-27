@@ -1110,30 +1110,6 @@ paths:
             application/json:
               schema:
                 type: object
-    delete:
-      description: Eliminar producto común del ticket
-      tags:
-        - Tickets
-      requestBody:
-        description: Código del producto común a eliminar
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                code:
-                  type: string
-            example:
-              code: "~1ab713a"
-      responses:
-        200:
-          description: El producto común ha sido eliminado del ticket
-        401:
-          description: Token JWT de autenticación no presente o inválido
-          content:
-            application/json:
-              schema:
-                type: object
   /products:
     get:
       description: Obtener lista de productos
